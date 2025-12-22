@@ -5,292 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Archivo Colaborativo</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #030303;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 30px;
-        }
-        
-        h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-            color: #333;
-        }
-        
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        
-        .welcome-screen, .dashboard, .register-screen, .upload-screen, .gallery-screen {
-            display: none;
-        }
-        
-        .welcome-screen.active, .dashboard.active, .register-screen.active, .upload-screen.active, .gallery-screen.active {
-            display: block;
-        }
-        
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 15px;
-            transition: border 0.3s;
-        }
-        
-        input:focus {
-            outline: none;
-            border-color: #4CAF50;
-        }
-        
-        button {
-            width: 100%;
-            padding: 14px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        
-        button:hover {
-            background: #45a049;
-        }
-        
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .secondary-btn {
-            background: #666;
-            margin-top: 10px;
-        }
-        
-        .secondary-btn:hover {
-            background: #555;
-        }
-        
-        .info-box {
-            background: #e8f5e9;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border-left: 4px solid #4CAF50;
-        }
-        
-        .info-box strong {
-            display: block;
-            margin-bottom: 5px;
-            color: #2e7d32;
-        }
-        
-        .invite-link {
-            background: #f5f5f5;
-            padding: 12px;
-            border-radius: 6px;
-            word-break: break-all;
-            font-family: monospace;
-            font-size: 14px;
-            margin: 10px 0;
-        }
-        
-        .stats {
-            display: flex;
-            justify-content: space-between;
-            margin: 20px 0;
-            padding: 15px;
-            background: #f9f9f9;
-            border-radius: 8px;
-        }
-        
-        .stat {
-            text-align: center;
-        }
-        
-        .stat-number {
-            font-size: 24px;
-            font-weight: bold;
-            color: #4CAF50;
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-        
-        .error {
-            background: #ffebee;
-            color: #c62828;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            border-left: 4px solid #c62828;
-        }
-        
-        .hidden {
-            display: none;
-        }
-
-        .upload-screen, .gallery-screen {
-            animation: fadeIn 0.3s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .image-preview {
-            margin: 20px 0;
-            min-height: 200px;
-            background: #f5f5f5;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .file-input-wrapper {
-            position: relative;
-            margin: 20px 0;
-        }
-
-        .file-input-wrapper input[type="file"] {
-            position: absolute;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
-        .file-input-label {
-            display: block;
-            padding: 40px;
-            background: #f5f5f5;
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .file-input-label:hover {
-            border-color: #4CAF50;
-            background: #e8f5e9;
-        }
-
-        .gallery-grid {
-            display: flex;
-            flex-direction: column;
-            margin: 20px 0;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .gallery-item {
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .gallery-item img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .order-info {
-            text-align: center;
-            color: #666;
-            font-size: 14px;
-            margin: 10px 0 20px 0;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 6px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal img {
-            max-width: 90%;
-            max-height: 90vh;
-            border-radius: 8px;
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 20px;
-            right: 30px;
-            color: white;
-            font-size: 40px;
-            cursor: pointer;
-            z-index: 1001;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <!-- Pantalla de bienvenida con código de invitación -->
         <div class="welcome-screen active">
-            <h1>🎨 Archivo Colaborativo</h1>
-            <p class="subtitle">Ingresa tu código de invitación</p>
-            
             <div id="errorMsg" class="error hidden"></div>
-            
             <input type="text" id="inviteCodeInput" placeholder="Código de invitación" />
             <button onclick="validateInvite()">Continuar</button>
         </div>
 
         <!-- Pantalla de registro -->
         <div class="register-screen">
-            <h1>✨ Bienvenido</h1>
             <p class="subtitle">Elige un nombre de usuario (opcional)</p>
-            
             <input type="text" id="usernameInput" placeholder="Nombre de usuario (opcional)" />
             <button onclick="completeRegistration()">Comenzar</button>
         </div>
 
         <!-- Dashboard principal -->
         <div class="dashboard">
-            <h1>📸 Tu Espacio</h1>
-            <p class="subtitle">Archivo colaborativo anónimo</p>
-            
             <div class="stats">
                 <div class="stat">
                     <div class="stat-number" id="totalUsers">-</div>
@@ -303,522 +38,73 @@
             </div>
 
             <div class="info-box" id="inviteSection">
-                <strong>Invita a alguien</strong>
-                <p style="font-size: 14px; color: #555; margin: 10px 0;">
-                    Comparte este enlace para que otros se unan:
-                </p>
+                <strong>compartir</strong>
                 <div class="invite-link" id="inviteLink">Generando...</div>
-                <button class="secondary-btn" onclick="copyInviteLink()">📋 Copiar enlace</button>
+                <button class="secondary-btn" onclick="copyInviteLink()"> Copiar enlace</button>
             </div>
 
-            <button onclick="goToUpload()">📤 Subir imagen</button>
-            <button class="secondary-btn" onclick="goToGallery()">🖼️ Ver galería</button>
+            <button onclick="goToUpload()">Subir imagen</button>
+            <button class="secondary-btn" onclick="goToGallery()"> Ver galería</button>
         </div>
 
         <!-- Pantalla de subida -->
         <div class="upload-screen">
-            <h1>📤 Subir Imagen</h1>
+            <h1>Subir Imagen</h1>
             <p class="subtitle">Comparte tu imagen con el archivo</p>
 
             <div class="file-input-wrapper">
-                <label class="file-input-label">
-                    📷 Selecciona una imagen
+                <input type="file" id="imageInput" accept="image/*" onchange="previewImage()">
+                <label class="file-input-label" for="imageInput">
+                    Selecciona una imagen
                     <br><small style="color: #999;">o arrastra aquí</small>
                 </label>
-                <input type="file" id="imageInput" accept="image/*" onchange="previewImage()">
             </div>
 
-            <div id="imagePreview" class="image-preview">
-                <span style="color: #999;">La previsualización aparecerá aquí</span>
+            <!-- AQUÍ DEBE IR EL PREVIEW SECTION -->
+            <div id="previewSection" style="display: none;">
+                <div id="exifPreview" class="exif-preview"></div>
+                <div id="imagePreview" class="image-preview">
+                    <span style="color: #999;">La previsualización aparecerá aquí</span>
+                </div>
+                <button onclick="uploadImage()"> Subir imagen</button>
+                <button class="secondary-btn" onclick="goToDashboard()">← Volver</button>
             </div>
 
-            <button onclick="uploadImage()">📤 Subir imagen</button>
-            <button class="secondary-btn" onclick="goToDashboard()">← Volver</button>
+            <!-- Esto se oculta cuando se muestra el preview -->
+            <div id="uploadSection">
+                <button class="secondary-btn" onclick="goToDashboard()">← Volver</button>
+            </div>
         </div>
 
         <!-- Pantalla de galería -->
         <div class="gallery-screen">
-            <h1></h1>
-            <p class="subtitle"></p>
+            
 
             <div id="orderInfo" class="order-info"></div>
 
-            <div id="galleryGrid" class="gallery-grid">
-                <p style="text-align: center; color: #666;">Cargando...</p>
+            <!-- CONTENEDOR PRINCIPAL DE GALERÍA CON EXIF -->
+            <div class="gallery-with-exif">
+                <!-- PANEL LATERAL DE EXIF (oculto inicialmente) -->
+                <div id="exifSidebar" class="exif-sidebar">
+                    <div class="exif-sidebar-header">
+                        
+                        <button class="close-exif-btn" onclick="closeExifSidebar()">&times;</button>
+                    </div>
+                    <div id="exifContent" class="exif-content">
+                        <p class="no-exif-selected">Haz clic en una imagen para ver sus metadatos</p>
+                    </div>
+                </div>
+
+                <!-- GALERÍA DE IMÁGENES -->
+                <div id="galleryGrid" class="gallery-grid">
+                    <p style="text-align: center; color: #666;">Cargando imágenes...</p>
+                </div>
             </div>
 
-            <button class="secondary-btn" onclick="goToDashboard()">←</button>
-        </div>
-
-        <!-- Modal para ver imagen completa -->
-        <div id="imageModal" class="modal" onclick="closeModal()">
-            <span class="close-modal">&times;</span>
-            <img id="modalImage" src="" alt="Imagen completa">
-            <div id="modalInfo" style="position: absolute; bottom: 30px; color: white; font-size: 18px;"></div>
+            <button class="secondary-btn" onclick="goToDashboard()">← Volver</button>
         </div>
     </div>
 
-    <script>
-        // CONFIGURA AQUÍ TUS CREDENCIALES DE SUPABASE
-        const SUPABASE_URL = 'https://pzstfcncefssgunyheyl.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6c3RmY25jZWZzc2d1bnloZXlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NTg5NjEsImV4cCI6MjA4MTMzNDk2MX0.yGBN6ViOxmB8ruWqqmDORhxfUhD25YH-w-2eVb6xlzk';
-        
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
-        let currentUser = null;
-        let pendingInviteCode = null;
-
-        // Cargar datos del usuario desde localStorage
-        function loadUser() {
-            const userData = localStorage.getItem('user');
-            if (userData) {
-                currentUser = JSON.parse(userData);
-                showDashboard();
-            }
-        }
-
-        // Validar código de invitación
-        async function validateInvite() {
-            const code = document.getElementById('inviteCodeInput').value.trim();
-            const errorMsg = document.getElementById('errorMsg');
-            
-            if (!code) {
-                showError('Por favor ingresa un código');
-                return;
-            }
-
-            errorMsg.classList.add('hidden');
-
-            try {
-                // Verificar si el código existe y no ha sido usado
-                const { data: invitation, error } = await supabase
-                    .from('invitations')
-                    .select('*, created_by(invitations_remaining)')
-                    .eq('code', code)
-                    .is('used_by', null)
-                    .single();
-
-                if (error || !invitation) {
-                    showError('Código de invitación inválido o ya usado');
-                    return;
-                }
-
-                // Verificar que el invitador tenga invitaciones disponibles
-                if (invitation.created_by.invitations_remaining <= 0) {
-                    showError('Este código ya no tiene invitaciones disponibles');
-                    return;
-                }
-
-                // Verificar límite de 100 usuarios
-                const { data: countData } = await supabase
-                    .rpc('count_total_users');
-                
-                if (countData >= 100) {
-                    showError('El archivo ha alcanzado su límite de 100 participantes');
-                    return;
-                }
-
-                // Código válido, guardar y pasar a registro
-                pendingInviteCode = code;
-                showRegisterScreen();
-
-            } catch (err) {
-                console.error(err);
-                showError('Error al validar el código. Intenta de nuevo.');
-            }
-        }
-
-        // Completar el registro
-        async function completeRegistration() {
-            const username = document.getElementById('usernameInput').value.trim() || null;
-
-            try {
-                // Obtener datos de la invitación
-                const { data: invitation } = await supabase
-                    .from('invitations')
-                    .select('created_by')
-                    .eq('code', pendingInviteCode)
-                    .single();
-
-                // Generar código único para el nuevo usuario
-                const newInviteCode = generateCode();
-
-                // Crear nuevo usuario
-                const { data: newUser, error: userError } = await supabase
-                    .from('users')
-                    .insert({
-                        username: username,
-                        invite_code: newInviteCode,
-                        invited_by: invitation.created_by,
-                        invitations_remaining: 2
-                    })
-                    .select()
-                    .single();
-
-                if (userError) throw userError;
-
-                // Marcar invitación como usada
-                await supabase
-                    .from('invitations')
-                    .update({ 
-                        used_by: newUser.id, 
-                        used_at: new Date().toISOString() 
-                    })
-                    .eq('code', pendingInviteCode);
-
-                // Reducir invitaciones del invitador
-                await supabase
-                    .rpc('decrement_invitations', { user_id: invitation.created_by });
-
-                // Guardar usuario y mostrar dashboard
-                currentUser = newUser;
-                localStorage.setItem('user', JSON.stringify(newUser));
-                showDashboard();
-
-            } catch (err) {
-                console.error(err);
-                showError('Error al crear tu cuenta. Intenta de nuevo.');
-            }
-        }
-
-        // Generar código aleatorio
-        function generateCode() {
-            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-            let code = '';
-            for (let i = 0; i < 10; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return code;
-        }
-
-        // Mostrar dashboard
-        async function showDashboard() {
-            document.querySelector('.welcome-screen').classList.remove('active');
-            document.querySelector('.register-screen').classList.remove('active');
-            document.querySelector('.dashboard').classList.add('active');
-
-            // Actualizar estadísticas
-            const { data: countData } = await supabase.rpc('count_total_users');
-            document.getElementById('totalUsers').textContent = countData || 0;
-            document.getElementById('remainingInvites').textContent = currentUser.invitations_remaining;
-
-            // Generar enlace de invitación si tiene invitaciones disponibles
-            if (currentUser.invitations_remaining > 0) {
-                await createInviteLink();
-            } else {
-                document.getElementById('inviteSection').innerHTML = 
-                    '<strong>No tienes invitaciones disponibles</strong>';
-            }
-        }
-
-        // Crear enlace de invitación
-        async function createInviteLink() {
-            const newCode = generateCode();
-            
-            const { error } = await supabase
-                .from('invitations')
-                .insert({
-                    code: newCode,
-                    created_by: currentUser.id
-                });
-
-            if (!error) {
-                // Obtener la URL base correcta
-                let baseUrl = window.location.origin + window.location.pathname;
-                
-                // Si estamos en file://, mostrar instrucciones especiales
-                if (baseUrl.startsWith('file://')) {
-                    baseUrl = 'TU_URL_AQUI'; // El usuario debe reemplazar esto
-                    document.getElementById('inviteLink').innerHTML = `
-                        <strong>⚠️ Archivo local detectado</strong><br>
-                        <small style="color: #666;">Sube el archivo a un servidor web o usa el código directamente:</small><br>
-                        <strong style="font-size: 18px; color: #4CAF50;">${newCode}</strong>
-                    `;
-                    document.querySelector('#inviteSection button').textContent = '📋 Copiar código';
-                    return;
-                }
-                
-                const link = `${baseUrl}?invite=${newCode}`;
-                document.getElementById('inviteLink').textContent = link;
-            }
-        }
-
-        // Copiar enlace o código
-        function copyInviteLink() {
-            const linkElement = document.getElementById('inviteLink');
-            let textToCopy = linkElement.textContent;
-            
-            // Si es un código directo (no URL), copiar solo el código
-            if (!textToCopy.startsWith('http')) {
-                const codeMatch = textToCopy.match(/[a-z0-9]{10}/);
-                if (codeMatch) {
-                    textToCopy = codeMatch[0];
-                }
-            }
-            
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                alert('¡Copiado al portapapeles!');
-            }).catch(() => {
-                // Fallback para navegadores antiguos
-                const input = document.createElement('input');
-                input.value = textToCopy;
-                document.body.appendChild(input);
-                input.select();
-                document.execCommand('copy');
-                document.body.removeChild(input);
-                alert('¡Copiado al portapapeles!');
-            });
-        }
-
-        // Mostrar error
-        function showError(msg) {
-            const errorMsg = document.getElementById('errorMsg');
-            errorMsg.textContent = msg;
-            errorMsg.classList.remove('hidden');
-        }
-
-        function showRegisterScreen() {
-            document.querySelector('.welcome-screen').classList.remove('active');
-            document.querySelector('.register-screen').classList.add('active');
-        }
-
-        // Navegar a subida de imágenes
-        function goToUpload() {
-            document.querySelector('.dashboard').classList.remove('active');
-            document.querySelector('.upload-screen').classList.add('active');
-        }
-
-        // Navegar a galería
-        function goToGallery() {
-            document.querySelector('.dashboard').classList.remove('active');
-            loadGallery();
-            document.querySelector('.gallery-screen').classList.add('active');
-        }
-
-        // Volver al dashboard
-        function goToDashboard() {
-            document.querySelector('.upload-screen').classList.remove('active');
-            document.querySelector('.gallery-screen').classList.remove('active');
-            document.querySelector('.dashboard').classList.add('active');
-            showDashboard();
-        }
-
-        // Calcular luminosidad de la imagen
-        async function calculateLuminosity(file) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                img.onload = () => {
-                    // Reducir tamaño para cálculo más rápido
-                    const maxSize = 200;
-                    let width = img.width;
-                    let height = img.height;
-                    
-                    if (width > height) {
-                        if (width > maxSize) {
-                            height *= maxSize / width;
-                            width = maxSize;
-                        }
-                    } else {
-                        if (height > maxSize) {
-                            width *= maxSize / height;
-                            height = maxSize;
-                        }
-                    }
-                    
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    // Obtener datos de píxeles
-                    const imageData = ctx.getImageData(0, 0, width, height);
-                    const data = imageData.data;
-                    
-                    let totalLuminosity = 0;
-                    const pixelCount = data.length / 4;
-                    
-                    // Calcular luminosidad promedio usando fórmula perceptual
-                    // L = 0.299*R + 0.587*G + 0.114*B
-                    for (let i = 0; i < data.length; i += 4) {
-                        const r = data[i];
-                        const g = data[i + 1];
-                        const b = data[i + 2];
-                        const luminosity = 0.299 * r + 0.587 * g + 0.114 * b;
-                        totalLuminosity += luminosity;
-                    }
-                    
-                    const avgLuminosity = totalLuminosity / pixelCount;
-                    resolve(parseFloat(avgLuminosity.toFixed(2)));
-                };
-                
-                img.onerror = reject;
-                img.src = URL.createObjectURL(file);
-            });
-        }
-
-        // Subir imagen
-        async function uploadImage() {
-            const input = document.getElementById('imageInput');
-            const file = input.files[0];
-            
-            if (!file) {
-                alert('Por favor selecciona una imagen');
-                return;
-            }
-
-            // Validar que sea imagen
-            if (!file.type.startsWith('image/')) {
-                alert('Solo se permiten archivos de imagen');
-                return;
-            }
-
-            // Validar tamaño (máximo 10MB)
-            if (file.size > 10 * 1024 * 1024) {
-                alert('La imagen es demasiado grande. Máximo 10MB');
-                return;
-            }
-
-            const uploadBtn = document.querySelector('.upload-screen button');
-            uploadBtn.disabled = true;
-            uploadBtn.textContent = 'Analizando imagen...';
-
-            try {
-                // Calcular luminosidad
-                const luminosity = await calculateLuminosity(file);
-                console.log('Luminosidad calculada:', luminosity);
-                
-                uploadBtn.textContent = 'Subiendo...';
-                
-                // Generar nombre único
-                const filename = `${Date.now()}_${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
-                
-                // Subir a Supabase Storage
-                const { data: uploadData, error: uploadError } = await supabase.storage
-                    .from('images')
-                    .upload(filename, file);
-
-                if (uploadError) throw uploadError;
-
-                // Obtener URL pública
-                const { data: urlData } = supabase.storage
-                    .from('images')
-                    .getPublicUrl(filename);
-
-                // Guardar metadata en la base de datos CON luminosidad
-                const { error: dbError } = await supabase
-                    .from('images')
-                    .insert({
-                        user_id: currentUser.id,
-                        image_url: urlData.publicUrl,
-                        luminosity: luminosity
-                    });
-
-                if (dbError) throw dbError;
-
-                alert(`✅ Imagen subida correctamente\nLuminosidad: ${luminosity.toFixed(0)}/255`);
-                input.value = '';
-                document.getElementById('imagePreview').innerHTML = '<span style="color: #999;">La previsualización aparecerá aquí</span>';
-                goToDashboard();
-
-            } catch (error) {
-                console.error('Error al subir imagen:', error);
-                alert('Error al subir la imagen. Intenta de nuevo.');
-            } finally {
-                uploadBtn.disabled = false;
-                uploadBtn.textContent = '📤 Subir imagen';
-            }
-        }
-
-        // Previsualizar imagen antes de subir
-        function previewImage() {
-            const input = document.getElementById('imageInput');
-            const preview = document.getElementById('imagePreview');
-            const file = input.files[0];
-
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    preview.innerHTML = `<img src="${e.target.result}" style="max-width: 100%; border-radius: 8px;">`;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // Cargar galería
-        async function loadGallery() {
-            const gallery = document.getElementById('galleryGrid');
-            const orderInfo = document.getElementById('orderInfo');
-            gallery.innerHTML = '<p style="text-align: center; color: #666;">Cargando imágenes...</p>';
-
-            try {
-                const { data: images, error } = await supabase
-                    .from('images')
-                    .select('*')
-                    .order('luminosity', { ascending: true }); // De oscuro a claro
-
-                if (error) throw error;
-
-                if (!images || images.length === 0) {
-                    gallery.innerHTML = '<p style="text-align: center; color: #666;">Aún no hay imágenes en el archivo</p>';
-                    orderInfo.textContent = '';
-                    return;
-                }
-
-                // Calcular rango de luminosidad
-                const minLum = Math.min(...images.map(img => img.luminosity || 0));
-                const maxLum = Math.max(...images.map(img => img.luminosity || 255));
-                orderInfo.textContent = `Ordenadas por luminosidad: ${minLum.toFixed(0)} (oscuro) → ${maxLum.toFixed(0)} (claro)`;
-
-                gallery.innerHTML = images.map(img => `
-                    <div class="gallery-item" onclick="viewImage('${img.image_url}', ${img.luminosity})">
-                        <img src="${img.image_url}" alt="Imagen del archivo" loading="lazy">
-                    </div>
-                `).join('');
-
-            } catch (error) {
-                console.error('Error al cargar galería:', error);
-                gallery.innerHTML = '<p style="text-align: center; color: #c62828;">Error al cargar las imágenes</p>';
-            }
-        }
-
-        // Ver imagen en grande
-        function viewImage(url, luminosity) {
-            const modal = document.getElementById('imageModal');
-            const modalImg = document.getElementById('modalImage');
-            const modalInfo = document.getElementById('modalInfo');
-            modal.style.display = 'flex';
-            modalImg.src = url;
-            if (luminosity !== undefined) {
-                modalInfo.textContent = `Luminosidad: ${luminosity.toFixed(0)}/255`;
-            } else {
-                modalInfo.textContent = '';
-            }
-        }
-
-        // Cerrar modal
-        function closeModal() {
-            document.getElementById('imageModal').style.display = 'none';
-        }
-
-        // Verificar si hay código en la URL al cargar
-        window.addEventListener('load', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const inviteCode = urlParams.get('invite');
-            
-            if (inviteCode) {
-                // Si hay código en la URL, rellenar el input y validar automáticamente
-                document.getElementById('inviteCodeInput').value = inviteCode;
-                // Esperar un momento para que el DOM esté listo
-                setTimeout(() => {
-                    validateInvite();
-                }, 100);
-            } else {
-                // Si no hay código, intentar cargar usuario existente
-                loadUser();
-            }
-        });
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
