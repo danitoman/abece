@@ -43,6 +43,12 @@ h1 {
     display: block;
 }
 
+
+.info-box#inviteSection, 
+.stat:last-child {
+    display: none !important;
+} 
+
 /* Formularios */
 input,
 textarea {
@@ -177,9 +183,7 @@ button:disabled {
     cursor: pointer;
 }
 
-.gallery-item.selected {
-   
-}
+
 
 
 .gallery-item img {
@@ -385,7 +389,7 @@ button:disabled {
     .exif-sidebar.active {
         width: 100%;
         max-height: 300px;
-        position: fixed
+        position: fixed;
         top: 0;
     }
     .container {

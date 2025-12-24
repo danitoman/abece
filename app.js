@@ -1,8 +1,20 @@
-// CONFIGURA AQUÍ TUS CREDENCIALES DE SUPABASE
-const SUPABASE_URL = 'https://pzstfcncefssgunyheyl.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6c3RmY25jZWZzc2d1bnloZXlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NTg5NjEsImV4cCI6MjA4MTMzNDk2MX0.yGBN6ViOxmB8ruWqqmDORhxfUhD25YH-w-2eVb6xlzk';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+(function() {
+    const SUPABASE_URL = 'https://pzstfcncefssgunyheyl.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6c3RmY25jZWZzc2d1bnloZXlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NTg5NjEsImV4cCI6MjA4MTMzNDk2MX0.yGBN6ViOxmB8ruWqqmDORhxfUhD25YH-w-2eVb6xlzk';
+
+    if (!window.supabaseClient) {
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    
+    // Hacemos que la variable y las funciones sean globales para el HTML
+    window.supabase = window.supabaseClient;
+    window.validateInvite = validateInvite; 
+    // (Añade aquí el resto de funciones si es necesario, como completeRegistration)
+})();
+
+
+
 
 let currentUser = null;
 let pendingInviteCode = null;
@@ -17,119 +29,122 @@ function loadUser() {
     }
 }
 
-// Validar código de invitación
 async function validateInvite() {
-    const code = document.getElementById('inviteCodeInput').value.trim();
+    const codeInput = document.getElementById('inviteCodeInput');
+    const code = codeInput.value.trim();
     const errorMsg = document.getElementById('errorMsg');
+    const continueBtn = document.querySelector('.welcome-screen button');
     
     if (!code) {
         showError('Por favor ingresa un código');
         return;
     }
 
+    continueBtn.disabled = true;
+    continueBtn.textContent = 'Validando...';
     errorMsg.classList.add('hidden');
 
     try {
-        // Verificar si el código existe y no ha sido usado
-        const { data: invitation, error } = await supabase
+        console.log("Validando código:", code);
+
+        // 1. Verificar si el código existe y no ha sido usado
+        const { data: invitation, error: invError } = await supabase
             .from('invitations')
-            .select('*, created_by(invitations_remaining)')
+            .select('*')  // Cambiado: solo selecciona los campos de invitations
             .eq('code', code)
             .is('used_by', null)
             .single();
 
-        if (error || !invitation) {
-            showError('Código de invitación inválido o ya usado');
+        if (invError || !invitation) {
+            console.error("Error invitación:", invError);
+            showError('Código inválido o ya utilizado');
+            continueBtn.disabled = false;
+            continueBtn.textContent = 'Continuar';
             return;
         }
 
-        // Verificar que el invitador tenga invitaciones disponibles
-        if (invitation.created_by.invitations_remaining <= 0) {
+        // 2. Ahora sí, verificar que el creador tenga invitaciones disponibles
+        const { data: creator, error: creatorError } = await supabase
+            .from('users')
+            .select('invitations_remaining')
+            .eq('id', invitation.created_by)
+            .single();
+
+        if (creatorError || !creator || creator.invitations_remaining <= 0) {
+            console.error("Error creador:", creatorError);
             showError('Este código ya no tiene invitaciones disponibles');
+            continueBtn.disabled = false;
+            continueBtn.textContent = 'Continuar';
             return;
         }
 
-        // Verificar límite de 100 usuarios
-        const { data: countData } = await supabase
+        // 3. Verificar límite de usuarios
+        const { data: countData, error: countError } = await supabase
             .rpc('count_total_users');
         
-        if (countData >= 100) {
+        if (countError) {
+            console.error("Error conteo:", countError);
+        } else if (countData >= 100) {
             showError('El archivo ha alcanzado su límite de 100 participantes');
+            continueBtn.disabled = false;
+            continueBtn.textContent = 'Continuar';
             return;
         }
 
-        // Código válido, guardar y pasar a registro
+        // Todo bien
         pendingInviteCode = code;
         showRegisterScreen();
 
     } catch (err) {
-        console.error(err);
-        showError('Error al validar el código. Intenta de nuevo.');
+        console.error("Error crítico:", err);
+        showError('Error de conexión. Revisa la consola (F12).');
+    } finally {
+        continueBtn.disabled = false;
+        continueBtn.textContent = 'Continuar';
     }
 }
-
-// Completar el registro
 async function completeRegistration() {
-    const username = document.getElementById('usernameInput').value.trim() || null;
+    const usernameInput = document.getElementById('usernameInput');
+    const username = usernameInput.value.trim() || "Participante Anónimo";
+    const btn = document.querySelector('.register-screen button');
+    
+    btn.disabled = true;
+    btn.textContent = 'Entrando...';
 
     try {
-        // Obtener datos de la invitación
-        const { data: invitation } = await supabase
-            .from('invitations')
-            .select('created_by')
-            .eq('code', pendingInviteCode)
-            .single();
-
-        // Generar código único para el nuevo usuario
-        const newInviteCode = generateCode();
-
-        // Crear nuevo usuario
+        // Insertamos el usuario directamente en la tabla 'users'
         const { data: newUser, error: userError } = await supabase
             .from('users')
             .insert({
                 username: username,
-                invite_code: newInviteCode,
-                invited_by: invitation.created_by,
-                invitations_remaining: 2
+                invite_code: generateCode(), // Ahora esta función ya existe
+                invitations_remaining: 0
             })
             .select()
             .single();
 
         if (userError) throw userError;
 
-        // Marcar invitación como usada
-        await supabase
-            .from('invitations')
-            .update({ 
-                used_by: newUser.id, 
-                used_at: new Date().toISOString() 
-            })
-            .eq('code', pendingInviteCode);
-
-        // Reducir invitaciones del invitador
-        await supabase
-            .rpc('decrement_invitations', { user_id: invitation.created_by });
-
-        // Guardar usuario y mostrar dashboard
+        // Guardamos la sesión localmente
         currentUser = newUser;
         localStorage.setItem('user', JSON.stringify(newUser));
+        
+        // Vamos al panel principal
         showDashboard();
 
     } catch (err) {
-        console.error(err);
-        showError('Error al crear tu cuenta. Intenta de nuevo.');
+        console.error("Error en registro:", err);
+        alert('Hubo un error al crear el usuario. Revisa la consola.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Comenzar';
     }
+}
+// Función para generar un código aleatorio simple
+function generateCode() {
+    return Math.random().toString(36).substring(2, 10).toUpperCase();
 }
 
-// Generar código aleatorio
-function generateCode() {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let code = '';
-    for (let i = 0; i < 10; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-}
 
 // Mostrar dashboard
 async function showDashboard() {

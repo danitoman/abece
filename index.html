@@ -6,19 +6,23 @@
     <title>Archivo Colaborativo</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+    <script src="app.js" defer></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f0f10">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <!-- Pantalla de bienvenida con código de invitación -->
-        <div class="welcome-screen active">
+        <div class="welcome-screen">
             <div id="errorMsg" class="error hidden"></div>
             <input type="text" id="inviteCodeInput" placeholder="Código de invitación" />
             <button onclick="validateInvite()">Continuar</button>
         </div>
 
         <!-- Pantalla de registro -->
-        <div class="register-screen">
+        <div class="register-screen active">
             <p class="subtitle">Elige un nombre de usuario (opcional)</p>
             <input type="text" id="usernameInput" placeholder="Nombre de usuario (opcional)" />
             <button onclick="completeRegistration()">Comenzar</button>
@@ -105,6 +109,14 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+   <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('Service Worker registrado'))
+        .catch(err => console.log('Fallo al registrar SW', err));
+    });
+  }
+</script>
 </body>
 </html>
