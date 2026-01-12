@@ -105,36 +105,44 @@ async function validateInvite() {
 }
 async function completeRegistration() {
     const usernameInput = document.getElementById('usernameInput');
-    const username = usernameInput.value.trim() || "Participante Anónimo";
+    let username = usernameInput.value.trim() || "Participante";
     const btn = document.querySelector('.register-screen button');
     
     btn.disabled = true;
     btn.textContent = 'Entrando...';
 
     try {
-        // Insertamos el usuario directamente en la tabla 'users'
+        // Generamos un código único para evitar conflictos de base de datos
+        const uniqueSuffix = Math.floor(Math.random() * 1000);
+        const finalUsername = `${username}_${uniqueSuffix}`;
+
         const { data: newUser, error: userError } = await supabase
             .from('users')
             .insert({
-                username: username,
-                invite_code: generateCode(), // Ahora esta función ya existe
+                username: finalUsername,
+                invite_code: generateCode(), 
                 invitations_remaining: 0
             })
             .select()
             .single();
 
-        if (userError) throw userError;
+        if (userError) {
+            // Si el error es por duplicado, avisamos
+            if (userError.code === '23505') {
+                alert('Ese nombre ya está en uso, intenta con otro.');
+            } else {
+                throw userError;
+            }
+            return;
+        }
 
-        // Guardamos la sesión localmente
         currentUser = newUser;
         localStorage.setItem('user', JSON.stringify(newUser));
-        
-        // Vamos al panel principal
         showDashboard();
 
     } catch (err) {
-        console.error("Error en registro:", err);
-        alert('Hubo un error al crear el usuario. Revisa la consola.');
+        console.error("Error detallado:", err);
+        alert('Error en el servidor. Revisa si las políticas RLS de Supabase permiten INSERT.');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Comenzar';
@@ -521,27 +529,22 @@ async function loadGallery() {
             gallery.innerHTML = '<p style="text-align: center; color: #666;">Aún no hay imágenes en el archivo</p>';
             return;
         }
+// Limpiar selección anterior
+selectedImageId = null;
 
-        // Limpiar selección anterior
-        selectedImageId = null;
-        
-        // Crear HTML para cada imagen
-        // Localiza esta parte dentro de loadGallery()
-        gallery.innerHTML = images.map((img, index) => {
-            const isSelected = selectedImageId === img.id ? 'selected' : '';
-            // Definimos una imagen por defecto o un placeholder
-            const defaultImg = 'https://via.placeholder.com/300?text=Imagen+no+disponible';
-            
-            return `
-                <div class="gallery-item ${isSelected}" onclick="showImageExif('${img.id}', '${img.image_url}', ${img.luminosity || 0}, this)">
-                    <img src="${img.image_url}" 
-                        alt="Imagen del archivo" 
-                        loading="lazy" 
-                        onerror="this.onerror=null; this.src='${defaultImg}';">
-                </div>
-            `;
-        }).join('');
-
+// Crear HTML para cada imagen
+gallery.innerHTML = images.map((img, index) => {
+    const isSelected = selectedImageId === img.id ? 'selected' : '';
+    
+    return `
+        <div class="gallery-item ${isSelected}" onclick="showImageExif('${img.id}', '${img.image_url}', ${img.luminosity || 0}, this)">
+            <img src="${img.image_url}" 
+                alt="Imagen del archivo" 
+                loading="lazy" 
+                onerror="this.parentElement.style.display='none';">
+        </div>
+    `;
+}).join('');
     } catch (error) {
         console.error('Error al cargar galería:', error);
         gallery.innerHTML = '<p style="text-align: center; color: #c62828;">Error al cargar las imágenes</p>';
